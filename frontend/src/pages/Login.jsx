@@ -10,6 +10,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,6 +20,7 @@ function Login() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const formData = new FormData();
       formData.append("username", email);
@@ -33,6 +35,7 @@ function Login() {
     } catch (err) {
       console.error(err.response?.data || err.message);
       setError("Invalid email or password");
+      setIsLoading(false);
     }
   };
 
@@ -84,10 +87,11 @@ function Login() {
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <LogIn className="w-5 h-5" />
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 

@@ -1,9 +1,9 @@
 {
-  "short_name": "React App",
-  "name": "React App",
+  "short_name": "NotesHub",
+  "name": "NotesHub - Notes, Tasks & Project Collaboration",
   "icons": [],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#4f46e5",
   "background_color": "#ffffff"
 }

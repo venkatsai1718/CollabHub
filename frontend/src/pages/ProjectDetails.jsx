@@ -26,13 +26,14 @@ function ProjectDetails() {
   const [showModal, setShowModal] = useState(false);
   const [noteTitle, setNoteTitle] = useState("");
   const [newNote, setNewNote] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [editingNoteId, setEditingNoteId] = useState(null);
 
   const { selectedNotes, setSelectedNotes } = useSelectedNotes();
 
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [notifyMessage, setNotifyMessage] = useState("");
+  const [sendingNotification, setSendingNotification] = useState(false);
 
   const [selectedMember, setSelectedMember] = useState(null);
   const [messageText, setMessageText] = useState("");
@@ -80,16 +81,16 @@ function ProjectDetails() {
     const notePayload = { title: noteTitle.trim(), body: newNote.trim() };
 
     try {
-      if (editingIndex) {
+      if (editingNoteId) {
         await api.put(
-          `/projects/${projectId}/notes/${editingIndex}`,
+          `/projects/${projectId}/notes/${editingNoteId}`,
           notePayload
         );
 
         setProject((prev) => ({
           ...prev,
           notes: prev.notes.map((n) =>
-            n.id === editingIndex
+            n.id === editingNoteId
               ? { ...n, ...notePayload, createdAt: new Date().toLocaleString() }
               : n
           ),
@@ -110,7 +111,7 @@ function ProjectDetails() {
 
       setNoteTitle("");
       setNewNote("");
-      setEditingIndex(null);
+      setEditingNoteId(null);
       setShowModal(false);
     } catch (err) {
       console.error("Failed to save note", err);
@@ -118,7 +119,7 @@ function ProjectDetails() {
   };
 
   const handleDeleteNote = async () => {
-    if (!editingIndex) return;
+    if (!editingNoteId) return;
 
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this note?"
@@ -126,15 +127,15 @@ function ProjectDetails() {
     if (!confirmDelete) return;
 
     try {
-      await api.delete(`/projects/${projectId}/notes/${editingIndex}`);
+      await api.delete(`/projects/${projectId}/notes/${editingNoteId}`);
 
       setProject((prev) => ({
         ...prev,
-        notes: prev.notes.filter((note) => note.id !== editingIndex),
+        notes: prev.notes.filter((note) => note.id !== editingNoteId),
       }));
 
       setShowModal(false);
-      setEditingIndex(null);
+      setEditingNoteId(null);
       setNoteTitle("");
       setNewNote("");
     } catch (err) {
@@ -198,24 +199,27 @@ function ProjectDetails() {
     return `${str[0].toUpperCase()}${str.slice(1)}`;
   };
 
-  const handleSendNotification = () => {
-    selectedMembers.forEach((member) => {
-      window.emailjs.send("service_vdtt318", "template_tsl5c89", {
-        sender_name: currentUser.name,
-        receiver_name: member.name,
-        email: member.email,
+  const handleSendNotification = async () => {
+    setSendingNotification(true);
+    try {
+      await api.post("/notifications/email", {
+        recipients: selectedMembers.map((member) => ({
+          email: member.email,
+          name: member.name,
+        })),
+        subject: `${currentUser.name} sent you a notification`,
         message: notifyMessage,
       });
-    });
 
-    setShowNotifyModal(false);
-    setSelectedMembers([]);
-    setNotifyMessage("");
+      setShowNotifyModal(false);
+      setSelectedMembers([]);
+      setNotifyMessage("");
+    } catch (err) {
+      console.error("Failed to send notification", err);
+    } finally {
+      setSendingNotification(false);
+    }
   };
-
-  if (!localStorage.getItem("token")) {
-    return null;
-  }
 
   if (loading) {
     return (
@@ -441,7 +445,7 @@ function ProjectDetails() {
 
                     setNoteTitle(note.title);
                     setNewNote(note.body);
-                    setEditingIndex(note.id);
+                    setEditingNoteId(note.id);
                     setShowModal(true);
                   }}
                 >
@@ -506,13 +510,13 @@ function ProjectDetails() {
         }`}
       >
         <NotebookPen className="w-6 h-6 text-indigo-600" />
-        {editingIndex ? "Edit Note" : "Add Note"}
+        {editingNoteId ? "Edit Note" : "Add Note"}
       </h3>
 
       <button
         onClick={() => {
           setShowModal(false);
-          setEditingIndex(null);
+          setEditingNoteId(null);
           setNoteTitle("");
           setNewNote("");
         }}
@@ -562,7 +566,7 @@ function ProjectDetails() {
 
     {/* Actions */}
     <div className="flex justify-between">
-      {editingIndex && (
+      {editingNoteId && (
         <button
           onClick={handleDeleteNote}
           className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium shadow-md"
@@ -576,7 +580,7 @@ function ProjectDetails() {
         <button
           onClick={() => {
             setShowModal(false);
-            setEditingIndex(null);
+            setEditingNoteId(null);
             setNoteTitle("");
             setNewNote("");
           }}
@@ -598,7 +602,7 @@ function ProjectDetails() {
             hover:from-indigo-700 hover:to-purple-700
             text-white transition"
         >
-          {editingIndex ? "Save Changes" : "Add Note"}
+          {editingNoteId ? "Save Changes" : "Add Note"}
         </button>
       </div>
     </div>
@@ -720,12 +724,12 @@ function ProjectDetails() {
               </button>
 
               <button
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition font-medium shadow-md hover:shadow-lg disabled:opacity-50"
-                disabled={!notifyMessage || selectedMembers.length === 0}
+                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg transition font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!notifyMessage || selectedMembers.length === 0 || sendingNotification}
                 onClick={handleSendNotification}
               >
                 <Bell className="w-4 h-4" />
-                Notify
+                {sendingNotification ? "Sending..." : "Notify"}
               </button>
             </div>
           </div>

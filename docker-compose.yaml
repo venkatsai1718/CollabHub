@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   mongo:
     image: mongo:7
-    container_name: my_mongo_db
+    container_name: mongodb
     ports:
       - "27017:27017"   # optional (for Mongo Compass)
     volumes:
@@ -11,28 +9,26 @@ services:
 
 
   backend:
-    build: ./backend
-    image: my-notes-api
-    container_name: notes_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: notesapi:latest
+    container_name: NotesAPI
     environment:
       MONGO_URL: mongodb://mongo:27017
-      DB_NAME: projectdb
-    env_file:
-      - .env
+      MONGO_DB_NAME: projectdb
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      SERPER_API_KEY: ${SERPER_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
     ports:
       - "8000:8000"
     depends_on:
       - mongo
-
-
-  frontend:
-    build: ./frontend
-    image: my-notes-ui
-    container_name: notes_ui
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
 
 volumes:
   mongo_data:

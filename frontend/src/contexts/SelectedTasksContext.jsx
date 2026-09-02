@@ -18,7 +18,7 @@ export const useSelectedTasks = () => {
   const context = useContext(SelectedTasksContext);
   if (!context) {
     throw new Error(
-      "useSelectedNotes must be used inside SelectedNotesProvider"
+      "useSelectedTasks must be used inside SelectedTasksProvider"
     );
   }
   return context;

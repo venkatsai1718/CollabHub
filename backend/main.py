@@ -1,18 +1,22 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import models, database, schemas
 from authentication import login_user, get_current_user
+from email_utils import send_email
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from hashing import Hash
 import jwt_token
+import os
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -329,6 +333,26 @@ async def send_message(
     msg["_id"] = str(result.inserted_id)
     return msg
 
+
+@app.post("/notifications/email")
+async def send_notification_email(
+    notification: models.NotificationRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    sent = []
+    failed = []
+
+    for recipient in notification.recipients:
+        body = f"{current_user['name']} says:\n\n{notification.message}"
+        try:
+            send_email(recipient.email, notification.subject, body)
+            sent.append(recipient.email)
+        except Exception as e:
+            print(f"Failed to send email to {recipient.email}: {e}")
+            failed.append(recipient.email)
+
+    return {"sent": sent, "failed": failed}
+
 from typing import List
 
 
@@ -549,4 +573,18 @@ async def llm_request(data: models.LLMRequest):
         "message": response,
         "sources": sources
     }
-    
+
+
+# Serve static frontend files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
+
+# Fallback route to serve index.html for SPA routing
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path) and not full_path.startswith("api"):
+        return FileResponse(index_path)
+    raise HTTPException(status_code=404, detail="Not found")

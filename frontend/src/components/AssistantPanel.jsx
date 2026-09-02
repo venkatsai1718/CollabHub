@@ -63,10 +63,6 @@ function AssistantPanel({ onClose }) {
 
     const context = contextParts.join("\n\n");
 
-    // const userMessage = context
-    //   ? `Context:\n${context}\n\nQuestion:\n${chat}`
-    //   : chat;
-
     const updatedHistory = [
       ...chatHistory,
       {
@@ -75,8 +71,6 @@ function AssistantPanel({ onClose }) {
         message: chat,
       },
     ];
-
-    console.log(updatedHistory);
 
     setChatHistory(updatedHistory);
     setChat("");
@@ -110,9 +104,10 @@ function AssistantPanel({ onClose }) {
           sources: res.data.sources,
         },
       ]);
-
-      setIsLoading(false);
     } catch (err) {
+      if (isSearchEnabled) {
+        setChatHistory((prev) => prev.filter((msg) => msg.role !== "system"));
+      }
       setChatHistory((prev) => [
         ...prev,
         {
@@ -120,6 +115,8 @@ function AssistantPanel({ onClose }) {
           message: "Failed to get response. Please try again.",
         },
       ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 

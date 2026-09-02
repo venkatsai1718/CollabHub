@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { UserPlus, User, Mail, Lock, AlertCircle } from "lucide-react";
+import { UserPlus, User, Mail, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
 import api from "../api";
 
 function Register() {
@@ -9,6 +9,8 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -19,6 +21,7 @@ function Register() {
       return;
     }
 
+    setIsLoading(true);
     try {
       await api.post("/register", {
         name,
@@ -28,11 +31,12 @@ function Register() {
       });
 
       setError("");
-      alert("Registration successful. Please login.");
-      navigate("/login");
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 1200);
     } catch (err) {
       console.error(err.response?.data || err.message);
       setError(err.response?.data?.error || "Registration failed");
+      setIsLoading(false);
     }
   };
 
@@ -49,6 +53,13 @@ function Register() {
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            Registration successful. Redirecting to login...
           </div>
         )}
 
@@ -111,10 +122,11 @@ function Register() {
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg"
+            disabled={isLoading || success}
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-lg transition duration-200 transform hover:scale-[1.02] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <UserPlus className="w-5 h-5" />
-            Create Account
+            {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
@@ -122,7 +134,7 @@ function Register() {
           Already have an account?{" "}
           <span
             className="text-purple-600 hover:text-purple-800 font-semibold cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
           >
             Sign In
           </span>

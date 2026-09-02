@@ -42,16 +42,23 @@ function Messages() {
   }, [selectedUser]);
 
   const sendReply = async () => {
-    if (!replyText.trim() || !selectedUser) return;
+    if (!replyText.trim() || !selectedUser || sending) return;
 
-    await api.post("/messages", {
-      receiver_id: selectedUser._id,
-      content: replyText.trim(),
-    });
+    setSending(true);
+    try {
+      await api.post("/messages", {
+        receiver_id: selectedUser._id,
+        content: replyText.trim(),
+      });
 
-    setReplyText("");
-    const res = await api.get(`/messages/${selectedUser._id}`);
-    setMessages(res.data);
+      setReplyText("");
+      const res = await api.get(`/messages/${selectedUser._id}`);
+      setMessages(res.data);
+    } catch (err) {
+      console.error("Failed to send message", err);
+    } finally {
+      setSending(false);
+    }
   };
 
   const capitalize = (str) => {

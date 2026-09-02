@@ -109,3 +109,14 @@ class LLMResponse(BaseModel):
     role: str
     message: str
     sources: Optional[List[Source]] = None
+
+
+class EmailRecipient(BaseModel):
+    email: str
+    name: str
+
+
+class NotificationRequest(BaseModel):
+    recipients: List[EmailRecipient]
+    subject: str
+    message: str

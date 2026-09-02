@@ -10,11 +10,12 @@ function NewProject() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const createProject = async () => {
-    if (!title.trim()) {
-      setError("Project title is required");
+    if (!title.trim() || isLoading) {
+      if (!title.trim()) setError("Project title is required");
       return;
     }
 
@@ -23,6 +24,7 @@ function NewProject() {
       description: description.trim(),
     };
 
+    setIsLoading(true);
     try {
       await api.post("/projects", newProject);
 
@@ -33,6 +35,7 @@ function NewProject() {
       navigate("/home/projects");
     } catch (err) {
       setError("Failed to create project");
+      setIsLoading(false);
     }
   };
 
@@ -116,9 +119,10 @@ function NewProject() {
 
         <button
           onClick={createProject}
-          className="w-fit px-6 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.01]"
+          disabled={isLoading}
+          className="w-fit px-6 flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
-          Create Project
+          {isLoading ? "Creating..." : "Create Project"}
         </button>
       </div>
     </div>

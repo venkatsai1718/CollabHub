@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MONGO_URL = os.getenv('MONGO_URL')
-DB_NAME = "projectdb"
+DB_NAME = os.getenv('MONGO_DB_NAME', 'projectdb')
 
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]

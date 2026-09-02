@@ -1,4 +1,4 @@
-import { Routes, Route, Outlet } from "react-router-dom";
+import { Routes, Route, Outlet, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,8 +15,6 @@ import { SelectedNotesProvider } from "./contexts/SelectedNotesContext";
 import { SelectedTasksProvider } from "./contexts/SelectedTasksContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
-// import "./css/App.css";
-
 const NotesLayout = () => (
       <SelectedTasksProvider>
 
@@ -31,8 +29,7 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Login />} />
-
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route element={<NotesLayout />}>

@@ -3,11 +3,7 @@ import {
   MessageSquare,
   Plus,
   X,
-  Send,
   Reply,
-  ChevronDown,
-  ChevronUp,
-  MoreHorizontal,
   Check,
   Clock,
 } from "lucide-react";
@@ -279,24 +275,21 @@ export default function CollaborativeTaskManager() {
       }
     }
 
-    for (const userStr of usersToNotify) {
+    if (usersToNotify.size === 0) return;
+
+    const recipients = [...usersToNotify].map((userStr) => {
       const user = JSON.parse(userStr);
-      try {
-        if (window.emailjs) {
-          await window.emailjs.send("service_vdtt318", "template_tsl5c89", {
-            sender_name: currentUser.name,
-            receiver_name: user.name,
-            email: user.email,
-            message: messageText,
-            task_title: taskTitle,
-          });
-          console.log(`Email notification sent to ${user.email}`);
-        } else {
-          console.warn("EmailJS not loaded");
-        }
-      } catch (error) {
-        console.error(`Failed to send email to ${user.email}:`, error);
-      }
+      return { email: user.email, name: user.name };
+    });
+
+    try {
+      await api.post("/notifications/email", {
+        recipients,
+        subject: `${currentUser.name} mentioned you in "${taskTitle}"`,
+        message: messageText,
+      });
+    } catch (error) {
+      console.error("Failed to send email notifications:", error);
     }
   };
 
@@ -431,20 +424,20 @@ export default function CollaborativeTaskManager() {
               >
                 {msg.sender}
               </span>
-              {/* <span
+              <span
                 className={`text-xs ${
                   theme === "dark" ? "text-gray-500" : "text-gray-400"
                 }`}
               >
                 •
-              </span> */}
-              {/* <span
+              </span>
+              <span
                 className={`text-xs ${
                   theme === "dark" ? "text-gray-500" : "text-gray-400"
                 }`}
               >
                 {getRelativeTime(msg.timestamp)}
-              </span> */}
+              </span>
               {replyingTo?.id === msg.id && (
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                   Replying...

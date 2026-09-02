@@ -16,14 +16,14 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 
 function Home() {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, setAuthToken } = useAuth();
   const [assistantOpen, setAssistantOpen] = useState(false);
   const outlet = useOutlet();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
   const logout = () => {
-    localStorage.removeItem("token");
+    setAuthToken(null);
     navigate("/", { replace: true });
   };
 
@@ -69,7 +69,7 @@ function Home() {
                     theme === "dark" ? "text-white" : "text-gray-800"
                   } hover:text-indigo-600 transition`}
                 >
-                  {capitalize(currentUser.name)}
+                  {currentUser ? capitalize(currentUser.name) : "..."}
                 </h3>
               </div>
             </Link>
@@ -82,15 +82,9 @@ function Home() {
               onClick={toggleTheme}
             >
               {theme === "light" ? (
-                <>
-                  <Moon className="w-4 h-4" strokeWidth={2.5} />
-                  {/* <span>Dark Mode</span> */}
-                </>
+                <Moon className="w-4 h-4" strokeWidth={2.5} />
               ) : (
-                <>
-                  <Sun className="w-4 h-4" strokeWidth={2.5} />
-                  {/* <span>Light Mode</span> */}
-                </>
+                <Sun className="w-4 h-4" strokeWidth={2.5} />
               )}
             </button>
           </div>
